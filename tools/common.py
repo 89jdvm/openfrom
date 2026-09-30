@@ -150,15 +150,33 @@ _LEAD_HEADING = re.compile(
     r"descripci[oó]n del (puesto|cargo)|responsabilidades|funciones|requisitos|tus funciones)\b\s*[:.\-–—]*\s*", re.I)
 
 
+# Three or more Title Case words (a heading) followed by a capitalised word and a lower-case one.
+_TITLE_RUN = re.compile(r"^(?:(?:[A-Z][\w'’/-]*|&|and|of|the|for|to|in|y|de|la|el)\s+){3,}(?=[A-Z][a-z]+\s+[a-z])")
+# Starts in the middle of a sentence: lower case, or a joining word.
+_FRAGMENT = re.compile(r"^(?:[a-zà-ÿ]|(?:And|Or|But|Also|As well as|Y|O|Pero|Además)\s)")
+
+
 def clean_summary(text: str) -> str:
-    """Drop section headings at the start of a summary ("Key Responsibilities", "Job description:")."""
+    """A summary that starts at a real sentence: section headings removed ("Key Responsibilities",
+    "Job description:"), a leading Title Case heading run dropped ("ESG Advisory & Technical
+    Leadership Provide..."), and a fragment start ("and the types of tasks...") skipped to the next
+    sentence. Returns "" when nothing clean is left."""
     t = (text or "").strip()
     for _ in range(3):
         new = _LEAD_HEADING.sub("", t, count=1).lstrip(" ·•-–—:")
         if new == t:
             break
         t = new
-    return t[:1].upper() + t[1:] if t else t
+    run = _TITLE_RUN.match(t)
+    if run and len(re.findall(r"(?:^|\s)[A-Z]", run.group(0))) >= 4:  # a heading, not "The Centre of Excellence"
+        t = t[run.end():]
+    if _FRAGMENT.match(t):
+        cut = re.search(r"[.!?:;]\s+(?=[A-Z0-9¿¡])", t)
+        t = t[cut.end():] if cut else ""
+    t = t.strip(" ·•-–—:")
+    if len(t.rstrip("…")) < 50:
+        return ""
+    return t[:1].upper() + t[1:]
 
 
 def short_summary(text: str, limit: int = 200) -> str:

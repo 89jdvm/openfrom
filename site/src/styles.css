@@ -299,3 +299,15 @@ details.table td, details.table th { padding: 2px var(--s3) 2px 0; text-align: l
 :root[data-theme="dark"] { --control: #6a6964; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --control: #6a6964; } }
 .drop, select, .file-btn span, .byok-body input[type="password"], .byok-body input[type="text"], .secondary { border-color: var(--control); }
+
+/* Round 2 fixes */
+.fig svg .partial { opacity: 1; fill: transparent; stroke: var(--open); stroke-width: 1.5; }
+@media (max-width: 639px) {
+  .filters { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s2) var(--s3); }
+  .filters label.check:has(select) { grid-column: 1 / -1; }
+  .filters select { width: 100%; }
+  .filters .count { grid-column: 1 / -1; text-align: right; margin: 0; }
+  body.matched h1 { font-size: var(--f-lg); margin-bottom: 0; }
+  body.matched .lede { display: none; }
+  body.matched .intro { padding: var(--s4) 0 var(--s3); }
+}

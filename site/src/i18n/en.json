@@ -146,7 +146,7 @@
   "who.range": "{a} to {b}",
   "m.partial": "week not over yet",
   "m.partialNote": "The last bar is this week so far.",
-  "m.peak": "Busiest week: {n} jobs, week of {date}.",
+  "m.peak": "Busiest: week of {date}, {n} jobs.",
   "edit": "Change CV or country",
   "compact": "{country} · CV of {words} words · {mode}",
   "compact.model": "full match",

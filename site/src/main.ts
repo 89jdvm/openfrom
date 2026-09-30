@@ -203,6 +203,7 @@ let formCollapsed = false;
 /** After a match the form folds into one line, so results and charts start near the top. */
 function collapseForm(on: boolean): void {
   formCollapsed = on;
+  document.body.classList.toggle('matched', on);
   $('#tool').hidden = on;
   $('#compact').hidden = !on;
   if (on && result && data) {
@@ -368,14 +369,14 @@ function isListy(p: string): boolean {
   return (p.match(/[,;|•·]/g) || []).length / Math.max(1, words) > 0.12;
 }
 
-function card(i: number, rank: Scored | undefined, prevPassage: number | null): string {
+function card(i: number, rank: Scored | undefined, commonPassage: number | null): string {
   const { jobs } = data!;
   const L = getLang() === 'es' ? 1 : 0;
   const closed = result!.status[i] !== 'yes';
   const meta1 = [jobs.org[i], jobs.posted[i] ? t('card.posted', { date: fmtDate(jobs.posted[i]) }) : '']
     .filter(Boolean).map(esc).join(' · ');
   let why = '';
-  if (result!.mode === 'model' && rank && rank.passage !== prevPassage) {
+  if (result!.mode === 'model' && rank && rank.passage !== commonPassage) {
     const p = result!.passages[rank.passage];
     if (p && !isListy(p)) why = t('card.why', { text: snippet(p) });
   }
@@ -417,6 +418,9 @@ function renderResults(): void {
   const roles = [...new Set(jobs.rf)].sort((a, b) => (meta.labels.rf[a]?.[L] ?? a).localeCompare(meta.labels.rf[b]?.[L] ?? b));
   const levels = ['INTERN', 'JUNIOR', 'MID', 'SENIOR', 'LEAD'];
   const k = Math.min(PAGE, list.length);
+  const freq = new Map<number, number>();
+  for (const i of shown) { const r = rankOf.get(i); if (r) freq.set(r.passage, (freq.get(r.passage) ?? 0) + 1); }
+  const common = freq.size ? [...freq].sort((a, b) => b[1] - a[1])[0][0] : null;
   root.innerHTML = `
     <p class="summary">${t(result.mode === 'model' ? 'sum.results' : 'sum.resultsQuick', {
       open: fmtNum(openCount), n: fmtNum(jobs.n), country: esc(cname), k: fmtNum(k) })}${filters.closed ? ' ' + esc(t('sum.closed')) : ''}</p>
@@ -432,7 +436,7 @@ function renderResults(): void {
       <label class="check"><input type="checkbox" id="f-closed" ${filters.closed ? 'checked' : ''}> ${esc(t('f.closed'))}</label>
       <span class="count num" aria-live="polite">${esc(t('f.count', { n: fmtNum(shown.length) }))}</span>
     </div>
-    ${shown.length ? `<ol class="jobs">${shown.map((i, j) => card(i, rankOf.get(i), j ? rankOf.get(shown[j - 1])?.passage ?? null : null)).join('')}</ol>` : `<p class="empty">${esc(t('empty.filters'))}</p>`}
+    ${shown.length ? `<ol class="jobs">${shown.map((i) => card(i, rankOf.get(i), common)).join('')}</ol>` : `<p class="empty">${esc(t('empty.filters'))}</p>`}
     ${list.length > shown.length ? `<p class="more"><button class="secondary" id="more">${esc(t('more'))}</button></p>` : ''}
     ${renderByok()}`;
   root.querySelector('.sr')?.remove();

@@ -130,13 +130,13 @@ function weeksFig(dates: string[], today: string): HTMLElement {
 
 /** Labelled rows with thin bars. `scale`: the value a full bar stands for (default: the largest row).
  *  `neutral`: grey bars, for anything that is not "open to you". */
-function rowsFig(title: string, rows: [string, number, string][], note = '', opts: { scale?: number; neutral?: boolean } = {}): HTMLElement {
+function rowsFig(title: string, rows: [string, number, string][], note = '', opts: { scale?: number; neutral?: boolean; bars?: boolean } = {}): HTMLElement {
   const fig = document.createElement('div');
   fig.className = 'fig';
   const max = opts.scale ?? Math.max(1, ...rows.map((r) => r[1]));
   fig.innerHTML = `<h3>${esc(title)}</h3><ul class="rows${opts.neutral ? ' neutral' : ''}">${rows.map(([name, v, label]) =>
     `<li><span class="name" title="${esc(name)}">${esc(name)}</span><span class="val">${esc(label)}</span>` +
-    `<span class="bar-track" aria-hidden="true"><span class="bar-fill" style="display:block;width:${Math.min(100, (100 * v) / max)}%"></span></span></li>`).join('')}</ul>` +
+    (opts.bars === false ? '' : `<span class="bar-track" aria-hidden="true"><span class="bar-fill" style="display:block;width:${Math.min(100, (100 * v) / max)}%"></span></span>`) + '</li>').join('')}</ul>` +
     (note ? `<p class="note">${esc(note)}</p>` : '');
   return fig;
 }
@@ -209,7 +209,7 @@ export function renderMarket(root: HTMLElement, data: Data, country: string, cou
       const orgs = new Map<string, number>();
       for (const i of openIdx) if (jobs.org[i]) orgs.set(jobs.org[i], (orgs.get(jobs.org[i]) ?? 0) + 1);
       const top = [...orgs].sort((a, b) => b[1] - a[1]).slice(0, 6);
-      grid.appendChild(rowsFig(t('m.employers'), top.map(([o, n]) => [o, n, fmtNum(n)])));
+      grid.appendChild(rowsFig(t('m.employers'), top.map(([o, n]) => [o, n, fmtNum(n)]), '', { bars: (top[0]?.[1] ?? 0) >= 5 }));
       const sk = new Map<string, number>();
       for (const i of openIdx) for (const s of jobs.sk[i] ? jobs.sk[i].split(',') : []) sk.set(s, (sk.get(s) ?? 0) + 1);
       const missing = [...sk].filter(([s, n]) => !cvSkillIds.has(s) && n / openIdx.length >= 0.05)

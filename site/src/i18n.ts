@@ -30,7 +30,15 @@ export function t(key: string, vars: Record<string, string | number> = {}): stri
 }
 
 export function fmtNum(n: number): string {
-  return new Intl.NumberFormat(lang === 'es' ? 'es' : 'en').format(Math.round(n));
+  // Spanish style does not group four-digit numbers by default ("1497"), which reads unevenly
+  // next to "20.079"; always group.
+  const opts = { useGrouping: 'always' } as unknown as Intl.NumberFormatOptions;
+  try {
+    return new Intl.NumberFormat(lang === 'es' ? 'es' : 'en', opts).format(Math.round(n));
+  } catch {
+    const s = String(Math.round(n));
+    return s.replace(/\B(?=(\d{3})+(?!\d))/g, lang === 'es' ? '.' : ',');
+  }
 }
 
 export function fmtDate(iso: string, withYear = false): string {
