@@ -140,7 +140,7 @@ def main() -> int:
     sidx = {s: i for i, s in enumerate(srcs)}
     cols = {
         "title": [p["title"] for p in jobs],
-        "org": [p.get("organization") or "" for p in jobs],
+        "org": [(p.get("organization") or "").strip(" -–—|·,") for p in jobs],
         "url": [p["url"] for p in jobs],
         "src": [sidx[p["source"]] for p in jobs],
         "posted": [p.get("posted") or p.get("first_seen") or "" for p in jobs],
@@ -186,6 +186,15 @@ def main() -> int:
     kept = json.loads(KEPT.read_text(encoding="utf-8")) if KEPT.exists() else None
     vocab = [s for s in json.loads(VOCAB.read_text(encoding="utf-8")) if kept is None or s["id"] in kept]
     write_json(SITE_DATA / "skills.json", vocab)
+
+    mp = STATE / "model.npz"
+    if mp.exists():
+        m = np.load(mp, allow_pickle=False)
+        write_json(SITE_DATA / "rfmodel.json", {
+            "cls": [str(c) for c in m["rf_cls"]],
+            "b": [round(float(x), 4) for x in m["rf_b"]],
+            "coef": [[round(float(x), 4) for x in row] for row in m["rf_coef"]],
+        })
 
     q = STATE / "quality.json"
     write_json(SITE_DATA / "quality.json", json.loads(q.read_text(encoding="utf-8")) if q.exists() else {})

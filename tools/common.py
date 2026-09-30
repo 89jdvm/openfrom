@@ -110,7 +110,7 @@ def make_posting(*, source: str, external_id, title: str, organization: str = ""
         "uid": f"{source}:{external_id}",
         "source": source,
         "title": clean_text(title, 200),
-        "organization": clean_text(organization, 120),
+        "organization": clean_text(organization, 120).strip(" -–—|·,"),
         "location": clean_text(location, 200),
         "countries": [c for c in (countries or []) if c],
         "remote": remote,

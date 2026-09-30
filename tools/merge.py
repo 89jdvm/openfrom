@@ -70,6 +70,27 @@ def listable(p: dict, today: date) -> bool:
     return bool(p.get("title") and p.get("url"))
 
 
+def dedupe(rows: list[dict], old: set[str], today: date) -> list[dict]:
+    """Listable rows, one per organisation + title, newest first. The employer's own board
+    wins over impact feeds, which win over job boards; ties keep the row seen earlier."""
+    best: dict[str, dict] = {}
+    for p in rows:
+        if not listable(p, today):
+            continue
+        k = key(p)
+        cur = best.get(k)
+        if cur is None:
+            best[k] = p
+            continue
+        a, b = (RANK.get(p["source"], 2), p["uid"] in old), (RANK.get(cur["source"], 2), cur["uid"] in old)
+        keep, drop = (p, cur) if (a[0], not a[1]) < (b[0], not b[1]) else (cur, p)
+        keep["also"] = keep.get("also") or []  # rows from the state carry None
+        if drop["source"] not in keep["also"] and drop["source"] != keep["source"]:
+            keep["also"].append(drop["source"])
+        best[k] = keep
+    return sorted(best.values(), key=lambda p: (p.get("posted") or p.get("first_seen") or ""), reverse=True)
+
+
 def main() -> int:
     today = date.today()
     fx = fx_rates()
@@ -82,23 +103,7 @@ def main() -> int:
                 continue
             fresh[p["uid"]] = enrich(p, fx, today.isoformat())
 
-    rows = list(old.values()) + list(fresh.values())
-    best: dict[str, dict] = {}
-    for p in rows:
-        if not listable(p, today):
-            continue
-        k = key(p)
-        cur = best.get(k)
-        if cur is None:
-            best[k] = p
-            continue
-        a, b = (RANK.get(p["source"], 2), p["uid"] in old), (RANK.get(cur["source"], 2), cur["uid"] in old)
-        keep, drop = (p, cur) if (a[0], not a[1]) < (b[0], not b[1]) else (cur, p)
-        keep.setdefault("also", [])
-        if drop["source"] not in keep["also"] and drop["source"] != keep["source"]:
-            keep["also"].append(drop["source"])
-        best[k] = keep
-    out = sorted(best.values(), key=lambda p: (p.get("posted") or p.get("first_seen") or ""), reverse=True)
+    out = dedupe(list(old.values()) + list(fresh.values()), set(old), today)
     n = write_jsonl(OUT, out)
     new = sum(1 for p in out if p["uid"] in fresh)
     scopes: dict[str, int] = {}

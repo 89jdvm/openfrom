@@ -66,10 +66,16 @@ const CONTACT_WORDS = /\b(e-?mail|phone|tel[eé]fono|m[oó]vil|mobile|address|di
 export function stripContact(text: string): string {
   const lines = text.replace(/\r/g, '').split('\n');
   const out: string[] = [];
+  let body = false;
   lines.forEach((raw, i) => {
     let l = raw.replace(EMAIL, ' ').replace(URL_RX, ' ').replace(PHONE, ' ');
     const words = l.trim().split(/\s+/).filter(Boolean);
-    if (i < 8 && words.length <= 6 && !/[a-z]{4,}.*[a-z]{4,}.*[a-z]{4,}/i.test(l)) return; // name / address header
+    if (!words.length) return;
+    // Header lines before the body: a name (every word capitalised) or a contact line (with | or a comma list).
+    const header = !body && i < 8 && words.length <= 6 &&
+      (words.every((w) => /^[\p{Lu}][\p{L}'.-]*$/u.test(w) || /^[|,·•-]$/.test(w)) || /[|·•]/.test(l) || (/,/.test(l) && words.length <= 4));
+    if (header) return;
+    body = true;
     if (CONTACT_WORDS.test(raw) && words.length <= 10) return;
     l = l.replace(/\s{2,}/g, ' ').trim();
     if (l) out.push(l);

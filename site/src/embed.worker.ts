@@ -26,7 +26,7 @@ type Msg =
   | { id: number; type: 'init' }
   | { id: number; type: 'embed'; texts: string[] }
   | { id: number; type: 'vectors'; buf: ArrayBuffer; n: number }
-  | { id: number; type: 'score'; queries: Float32Array[] };
+  | { id: number; type: 'score'; queries: Float32Array[]; whole: Float32Array; prior: Float32Array };
 
 const post = (m: unknown, transfer: Transferable[] = []) => (self as DedicatedWorkerGlobalScope).postMessage(m, transfer);
 
@@ -62,21 +62,40 @@ async function embed(texts: string[]): Promise<Float32Array[]> {
   return out;
 }
 
-/** For each job: best cosine over the CV passages, and which passage it was. */
-function score(queries: Float32Array[]): { best: Float32Array; which: Uint8Array } {
+function dots(v: Float32Array, q: Int8Array, scale: Float32Array, n: number): Float32Array {
+  const out = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    let s = 0;
+    const off = i * DIM;
+    for (let d = 0; d < DIM; d++) s += q[off + d] * v[d];
+    out[i] = s * scale[i];
+  }
+  return out;
+}
+
+/**
+ * Score = 0.4 x similarity to the whole CV + 0.3 x best passage + 0.3 x second-best passage
+ *       + 0.1 x sqrt(probability that the CV belongs to the job's role family).
+ * The last term keeps a Spanish CV from drifting to jobs that merely share its language.
+ * `which` is the best passage, used for the reason line.
+ */
+function score(queries: Float32Array[], whole: Float32Array, prior: Float32Array): { best: Float32Array; which: Uint8Array } {
   if (!jobs) throw new Error('vectors not loaded');
   const { q, scale, n } = jobs;
-  const best = new Float32Array(n).fill(-1);
+  const w = dots(whole, q, scale, n);
+  const top1 = new Float32Array(n).fill(-1), top2 = new Float32Array(n).fill(-1);
   const which = new Uint8Array(n);
   for (let k = 0; k < queries.length; k++) {
-    const v = queries[k];
+    const s = dots(queries[k], q, scale, n);
     for (let i = 0; i < n; i++) {
-      let s = 0;
-      const off = i * DIM;
-      for (let d = 0; d < DIM; d++) s += q[off + d] * v[d];
-      s *= scale[i];
-      if (s > best[i]) { best[i] = s; which[i] = k; }
+      if (s[i] > top1[i]) { top2[i] = top1[i]; top1[i] = s[i]; which[i] = k; }
+      else if (s[i] > top2[i]) top2[i] = s[i];
     }
+  }
+  const best = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    const t2 = top2[i] > -1 ? top2[i] : top1[i];
+    best[i] = 0.4 * w[i] + 0.3 * top1[i] + 0.3 * t2 + 0.1 * Math.sqrt(prior[i] || 0);
   }
   return { best, which };
 }
@@ -94,7 +113,7 @@ self.onmessage = async (e: MessageEvent<Msg>) => {
       jobs = { q: new Int8Array(m.buf, 0, m.n * DIM), scale: new Float32Array(m.buf.slice(m.n * DIM, m.n * DIM + m.n * 4)), n: m.n };
       post({ id: m.id, type: 'ok' });
     } else if (m.type === 'score') {
-      const r = score(m.queries);
+      const r = score(m.queries, m.whole, m.prior);
       post({ id: m.id, type: 'scored', ...r }, [r.best.buffer, r.which.buffer]);
     }
   } catch (err) {

@@ -189,7 +189,7 @@ select {
 .who.open { background: var(--open-bg); color: var(--open-ink); }
 .who.closed { background: var(--closed-bg); color: var(--ink-2); }
 .who.unsure { background: var(--warn-bg); color: var(--warn-ink); }
-.tag { font-size: var(--f-xs); color: var(--muted); margin-left: var(--s2); }
+.tag { font-size: var(--f-xs); color: var(--muted); margin-left: var(--s2); white-space: nowrap; display: inline-block; }
 .ai-note { font-size: var(--f-sm); margin: var(--s2) 0 0; padding: var(--s2) var(--s3); border-left: 2px solid var(--line-strong); color: var(--ink); max-width: 60em; }
 .empty { padding: var(--s6) 0; color: var(--ink-2); max-width: 40em; }
 .more { margin: var(--s4) 0 0; }

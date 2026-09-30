@@ -2,7 +2,7 @@ import './styles.css';
 import { applyStatic, detectLang, fmtDate, fmtNum, getLang, listJoin, setLang, t, type Lang } from './i18n';
 import { loadData, type Data } from './data';
 import { countryName, guessCountry, openTo, parseWho } from './geo';
-import { chunks, CvError, readFile, wordCount } from './cv';
+import { chunks, CvError, readFile, stripContact, wordCount } from './cv';
 import { Embedder } from './embed';
 import { compileSkills, cvSkills, Keyword, rankModel, snippet, type Scored } from './match';
 import { renderMarket } from './market';
@@ -212,6 +212,27 @@ async function ensureModel(): Promise<void> {
   }
 }
 
+let rfModel: { cls: string[]; b: number[]; coef: number[][] } | null = null;
+
+/** Per job: the probability that the CV belongs to the job's role family (softmax of the trained model). */
+async function rolePrior(v: Float32Array): Promise<Float32Array> {
+  const n = data!.jobs.n;
+  const out = new Float32Array(n);
+  try {
+    rfModel ??= await (await fetch(new URL('./data/rfmodel.json', document.baseURI))).json();
+  } catch {
+    return out;
+  }
+  const m = rfModel!;
+  const logits = m.coef.map((row, c) => row.reduce((s, x, d) => s + x * v[d], m.b[c]));
+  const mx = Math.max(...logits);
+  const ex = logits.map((l) => Math.exp(l - mx));
+  const sum = ex.reduce((a, b) => a + b, 0);
+  const p = new Map(m.cls.map((c, i) => [c, ex[i] / sum]));
+  for (let i = 0; i < n; i++) out[i] = p.get(data!.jobs.rf[i]) ?? 0;
+  return out;
+}
+
 async function run(): Promise<void> {
   if (!data) return;
   const cv = $<HTMLTextAreaElement>('#cv-text').value.trim();
@@ -235,8 +256,11 @@ async function run(): Promise<void> {
       passages = chunks(cv);
       if (!passages.length) passages = [cv.slice(0, 600)];
       status(t('status.matching', { n: fmtNum(data.jobs.n) }));
-      const vecs = await embedder!.embed(passages.map((p) => 'query: ' + p));
-      const { best, which } = await embedder!.score(vecs);
+      const body = stripContact(cv).slice(0, 1500);
+      const all = await embedder!.embed([...passages.map((p) => 'query: ' + p), 'query: ' + body, 'passage: ' + body]);
+      const vecs = all.slice(0, passages.length);
+      const prior = await rolePrior(all[all.length - 1]);
+      const { best, which } = await embedder!.score(vecs, all[all.length - 2], prior);
       ranked = rankModel(best, which);
     } else {
       status(t('status.matching', { n: fmtNum(data.jobs.n) }));

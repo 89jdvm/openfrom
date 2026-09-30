@@ -41,8 +41,8 @@ export class Embedder {
     await this.call({ type: 'vectors', buf, n });
   }
 
-  async score(queries: Float32Array[]): Promise<{ best: Float32Array; which: Uint8Array }> {
-    const r = await this.call({ type: 'score', queries });
+  async score(queries: Float32Array[], whole: Float32Array, prior: Float32Array): Promise<{ best: Float32Array; which: Uint8Array }> {
+    const r = await this.call({ type: 'score', queries, whole, prior });
     return { best: r.best as Float32Array, which: r.which as Uint8Array };
   }
 }
