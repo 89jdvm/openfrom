@@ -1,0 +1,15 @@
+.tmp/
+.venv/
+node_modules/
+.env
+.claude/
+CLAUDE.md
+PLAN.md
+STATUS.md
+brainstorms/
+test-results/
+playwright-report/
+dist/
+__pycache__/
+*.pyc
+.pytest_cache/

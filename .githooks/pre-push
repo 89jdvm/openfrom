@@ -1,0 +1,6 @@
+#!/bin/sh
+# Public-safety guard over the full history before anything leaves this machine.
+PY=python
+[ -x .venv/Scripts/python.exe ] && PY=.venv/Scripts/python.exe
+[ -x .venv/bin/python ] && PY=.venv/bin/python
+exec "$PY" tools/check_public_safe.py --history

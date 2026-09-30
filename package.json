@@ -1,0 +1,27 @@
+{
+  "name": "openfrom",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Remote jobs you can actually take from where you live.",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "vite site",
+    "build": "tsc -p site --noEmit && vite build site",
+    "preview": "vite preview site",
+    "test": "vitest run",
+    "e2e": "playwright test --reporter=line"
+  },
+  "dependencies": {
+    "@fontsource/ibm-plex-sans": "5.3.0",
+    "@huggingface/transformers": "4.3.0",
+    "mammoth": "1.13.0",
+    "pdfjs-dist": "5.7.284"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "typescript": "5.9.3",
+    "vite": "8.3.1",
+    "vitest": "5.0.3"
+  }
+}
