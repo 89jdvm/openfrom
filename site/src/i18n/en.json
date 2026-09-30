@@ -142,5 +142,6 @@
   "field.engagement": "Contract type",
   "field.employer_type": "Employer type",
   "foot.by": "Made by",
-  "foot.code": "Code"
+  "foot.code": "Code",
+  "who.range": "{a} to {b}"
 }

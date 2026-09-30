@@ -83,6 +83,10 @@ function initTabs(): void {
       x.tabIndex = on ? 0 : -1;
       $(`#panel-${x.dataset.tab}`).hidden = !on;
     }
+    const about = tab.dataset.tab === 'about';
+    for (const id of ['#tool', '.intro']) $(id).hidden = about;
+    if (about) $('#status').hidden = true;
+    else if ($('#status-text').textContent) $('#status').hidden = false;
     if (focus) tab.focus();
   };
   tabs.forEach((tab, i) => {
@@ -278,7 +282,7 @@ function whoChip(i: number): string {
 
 function fmtBand([a, b]: number[]): string {
   const f = (x: number) => (x >= 0 ? '+' : '−') + Math.abs(x);
-  return a === b ? f(a) : `${f(a)} to ${f(b)}`;
+  return a === b ? f(a) : t('who.range', { a: f(a), b: f(b) });
 }
 
 function payText(i: number): string {
@@ -324,7 +328,7 @@ function card(i: number, rank: Scored | undefined): string {
     why = t('card.why', { text: snippet(result!.passages[rank.passage]) });
   }
   const skillName = new Map(data!.skills.map((s) => [s.id, L ? s.es : s.en]));
-  const shared = (jobs.sk[i] ? jobs.sk[i].split(',') : []).filter((s) => result!.cvSkills.has(s)).slice(0, 4)
+  const shared = (jobs.sk[i] ? jobs.sk[i].split(',') : []).filter((s) => result!.cvSkills.has(s)).slice(0, 3)
     .map((s) => skillName.get(s) ?? s);
   if (shared.length) why += (why ? ' ' : '') + t('card.shared', { skills: listJoin(shared) });
   const rf = meta.labels.rf[jobs.rf[i]]?.[L] ?? '';

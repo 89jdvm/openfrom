@@ -142,5 +142,6 @@
   "field.engagement": "Tipo de contrato",
   "field.employer_type": "Tipo de empleador",
   "foot.by": "Hecho por",
-  "foot.code": "Código"
+  "foot.code": "Código",
+  "who.range": "{a} a {b}"
 }

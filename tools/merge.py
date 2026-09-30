@@ -33,10 +33,17 @@ KEEP = ["uid", "source", "title", "organization", "location", "url", "posted", "
         "summary", "w", "pay", "also"]
 
 
+_GENERIC = {"the", "global", "international", "group", "world", "united", "new", "first", "open", "remote"}
+
+
 def key(p: dict) -> str:
+    """Organisation + title. The organisation is cut to its first distinctive word, so
+    "Planet" and "Planet Labs" posting the same title count as one job."""
     norm = lambda s: re.sub(r"[^a-z0-9]+", " ", (s or "").lower()).strip()  # noqa: E731
     title = re.sub(r"\((remote|m/f/d|f/m/x|m/w/d|all genders)\)|\b(remote|remoto)\b", "", p.get("title") or "", flags=re.I)
-    return f"{norm(p.get('organization'))}|{norm(title)}"
+    words = norm(p.get("organization")).split()
+    org = words[0] if words and len(words[0]) >= 4 and words[0] not in _GENERIC else " ".join(words)
+    return f"{org}|{norm(title)}"
 
 
 def enrich(p: dict, fx: dict, today: str) -> dict:

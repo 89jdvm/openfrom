@@ -252,7 +252,7 @@ details.table td, details.table th { padding: 2px var(--s3) 2px 0; text-align: l
 }
 .warn { font-size: var(--f-sm); background: var(--warn-bg); color: var(--warn-ink); padding: var(--s2) var(--s3); border-radius: var(--radius); margin: 0; }
 
-.foot { padding: var(--s5) var(--s4) var(--s6); font-size: var(--f-xs); color: var(--muted); border-top: 1px solid var(--line); }
+.foot { padding-top: var(--s5); padding-bottom: var(--s6); font-size: var(--f-xs); color: var(--muted); border-top: 1px solid var(--line); }
 .foot a { color: var(--ink-2); }
 
 @media (prefers-reduced-motion: reduce) {

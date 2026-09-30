@@ -188,13 +188,13 @@ export function renderMarket(root: HTMLElement, data: Data, country: string, cou
     if (!openIdx.length) {
       grid.insertAdjacentHTML('beforeend', `<p class="note">${esc(t('m.none'))}</p>`);
     } else {
+      const pays = openIdx.map((i) => jobs.pay[i]).filter((p): p is number[] => Array.isArray(p)).map((p) => (p[0] + p[1]) / 2);
+      grid.appendChild(payFig(pays));
       grid.appendChild(weeksFig(openIdx.map((i) => jobs.posted[i]).filter(Boolean), meta.date));
       const orgs = new Map<string, number>();
       for (const i of openIdx) if (jobs.org[i]) orgs.set(jobs.org[i], (orgs.get(jobs.org[i]) ?? 0) + 1);
       const top = [...orgs].sort((a, b) => b[1] - a[1]).slice(0, 6);
       grid.appendChild(rowsFig(t('m.employers'), top.map(([o, n]) => [o, n, fmtNum(n)])));
-      const pays = openIdx.map((i) => jobs.pay[i]).filter((p): p is number[] => Array.isArray(p)).map((p) => (p[0] + p[1]) / 2);
-      grid.appendChild(payFig(pays));
       const sk = new Map<string, number>();
       for (const i of openIdx) for (const s of jobs.sk[i] ? jobs.sk[i].split(',') : []) sk.set(s, (sk.get(s) ?? 0) + 1);
       const missing = [...sk].filter(([s, n]) => !cvSkillIds.has(s) && n / openIdx.length >= 0.05)
