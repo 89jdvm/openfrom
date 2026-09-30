@@ -142,10 +142,29 @@ _EMAIL = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
 _URL = re.compile(r"(https?://|www\.)\S+", re.I)
 
 
+_LEAD_HEADING = re.compile(
+    r"^\W*(job description|position (summary|overview)|role (description|summary|overview)|overview|summary|"
+    r"about (the|this) (role|position|job|opportunity)|the (role|opportunity|position)|your role|in this role|"
+    r"(key |main |core |principal )?(duties and )?responsibilities( and duties)?( may include| include)?|duties|"
+    r"what you('| wi)ll (do|be doing)|what we('re| are) looking for|requirements|qualifications|"
+    r"descripci[oó]n del (puesto|cargo)|responsabilidades|funciones|requisitos|tus funciones)\b\s*[:.\-–—]*\s*", re.I)
+
+
+def clean_summary(text: str) -> str:
+    """Drop section headings at the start of a summary ("Key Responsibilities", "Job description:")."""
+    t = (text or "").strip()
+    for _ in range(3):
+        new = _LEAD_HEADING.sub("", t, count=1).lstrip(" ·•-–—:")
+        if new == t:
+            break
+        t = new
+    return t[:1].upper() + t[1:] if t else t
+
+
 def short_summary(text: str, limit: int = 200) -> str:
     """At most `limit` characters of plain text, emails and URLs removed, cut at a word."""
     t = _URL.sub("", _EMAIL.sub("", text or ""))
-    t = re.sub(r"\s+", " ", t).strip()
+    t = clean_summary(re.sub(r"\s+", " ", t).strip())
     if len(t) <= limit:
         return t
     cut = t[: limit - 1].rsplit(" ", 1)[0].rstrip(",;:.-")

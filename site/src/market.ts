@@ -99,42 +99,52 @@ function weeksFig(dates: string[], today: string): HTMLElement {
     if (i >= 0) counts[i]++;
   }
   const max = Math.max(1, ...counts);
-  const W = 480, H = 120, top = 16, base = H - 22, gap = 6;
+  // The chart itself carries no text: labels are HTML below it, so they stay legible at any width.
+  const W = 480, H = 96, top = 4, base = H - 1, gap = 6;
   const bw = (W - gap * (weeks.length - 1)) / weeks.length;
   const s = svg(W, H, t('m.weeks'));
+  s.setAttribute('preserveAspectRatio', 'none');
+  s.classList.add('bars');
+  s.style.height = `${H}px`;
   el('line', { x1: 0, x2: W, y1: base + 0.5, y2: base + 0.5, class: 'axis' }, s);
+  const partial = today < addDays(weeks[weeks.length - 1], 6); // the current week is not over yet
+  let peak = 0;
   counts.forEach((c, i) => {
     const x = i * (bw + gap);
     const h = ((base - top) * c) / max;
     const g = el('g', {}, s);
-    if (c) el('path', { d: barPath(x, base - h, bw, h), class: 'open bar' }, g);
+    const last = i === weeks.length - 1;
+    if (c) el('path', { d: barPath(x, base - h, bw, h), class: `open bar${last && partial ? ' partial' : ''}` }, g);
     const hit = el('rect', { x: x - gap / 2, y: 0, width: bw + gap, height: base, class: 'hit' }, g);
-    hover(hit, t('m.weekTip', { date: fmtDate(weeks[i]), n: fmtNum(c) }));
-    if (c === max) {
-      const tx = el('text', { x: x + bw / 2, y: base - h - 4, 'text-anchor': 'middle' }, g);
-      tx.textContent = fmtNum(c);
-    }
+    hover(hit, t('m.weekTip', { date: fmtDate(weeks[i]), n: fmtNum(c) }) + (last && partial ? ` (${t('m.partial')})` : ''));
+    if (c === max) peak = i;
   });
-  for (const i of [0, weeks.length - 1]) {
-    const tx = el('text', { x: i === 0 ? 0 : W, y: H - 4, 'text-anchor': i === 0 ? 'start' : 'end', class: 'tick' }, s);
-    tx.textContent = fmtDate(weeks[i]);
-  }
   fig.innerHTML = `<h3>${esc(t('m.weeks'))}</h3>`;
   fig.appendChild(s);
+  fig.insertAdjacentHTML('beforeend', `<div class="axis-row"><span>${esc(fmtDate(weeks[0]))}</span><span>${esc(fmtDate(weeks[weeks.length - 1]))}</span></div>` +
+    `<p class="note">${esc(t('m.peak', { n: fmtNum(counts[peak]), date: fmtDate(weeks[peak]) }))}${partial ? ' ' + esc(t('m.partialNote')) : ''}</p>`);
   const rows = weeks.map((wk, i) => `<tr><td>${esc(fmtDate(wk))}</td><td>${fmtNum(counts[i])}</td></tr>`).join('');
   fig.insertAdjacentHTML('beforeend', `<details class="table"><summary>${esc(t('m.table'))}</summary><table><thead><tr><th>${esc(t('m.colWeek'))}</th><th>${esc(t('m.colJobs'))}</th></tr></thead><tbody>${rows}</tbody></table></details>`);
   return fig;
 }
 
-function rowsFig(title: string, rows: [string, number, string][], note = ''): HTMLElement {
+/** Labelled rows with thin bars. `scale`: the value a full bar stands for (default: the largest row).
+ *  `neutral`: grey bars, for anything that is not "open to you". */
+function rowsFig(title: string, rows: [string, number, string][], note = '', opts: { scale?: number; neutral?: boolean } = {}): HTMLElement {
   const fig = document.createElement('div');
   fig.className = 'fig';
-  const max = Math.max(1, ...rows.map((r) => r[1]));
-  fig.innerHTML = `<h3>${esc(title)}</h3><ul class="rows">${rows.map(([name, v, label]) =>
+  const max = opts.scale ?? Math.max(1, ...rows.map((r) => r[1]));
+  fig.innerHTML = `<h3>${esc(title)}</h3><ul class="rows${opts.neutral ? ' neutral' : ''}">${rows.map(([name, v, label]) =>
     `<li><span class="name" title="${esc(name)}">${esc(name)}</span><span class="val">${esc(label)}</span>` +
-    `<span class="bar-track" aria-hidden="true"><span class="bar-fill" style="display:block;width:${(100 * v) / max}%"></span></span></li>`).join('')}</ul>` +
+    `<span class="bar-track" aria-hidden="true"><span class="bar-fill" style="display:block;width:${Math.min(100, (100 * v) / max)}%"></span></span></li>`).join('')}</ul>` +
     (note ? `<p class="note">${esc(note)}</p>` : '');
   return fig;
+}
+
+function addDays(iso: string, n: number): string {
+  const d = new Date(iso + 'T12:00:00Z');
+  d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().slice(0, 10);
 }
 
 function payFig(pays: number[]): HTMLElement {
@@ -148,20 +158,25 @@ function payFig(pays: number[]): HTMLElement {
   const s = [...pays].sort((a, b) => a - b);
   const p10 = quantile(s, 0.1), p25 = quantile(s, 0.25), med = quantile(s, 0.5), p75 = quantile(s, 0.75), p90 = quantile(s, 0.9);
   const lo = p10 * 0.9, hi = p90 * 1.05;
-  const W = 480, H = 58, y = 14, x = (v: number) => ((v - lo) / (hi - lo)) * W;
+  const W = 480, H = 24, y = 4, x = (v: number) => ((v - lo) / (hi - lo)) * W;
   const money = (v: number) => '$' + fmtNum(Math.round(v / 10) * 10);
   const g = svg(W, H, `${money(p25)}–${money(p75)}, median ${money(med)}`);
-  el('line', { x1: x(p10), x2: x(p90), y1: y + 7, y2: y + 7, stroke: 'var(--closed)', 'stroke-width': 2 }, g);
-  const box = el('rect', { x: x(p25), y, width: Math.max(4, x(p75) - x(p25)), height: 14, rx: 3, class: 'open' }, g);
+  g.setAttribute('preserveAspectRatio', 'none');
+  g.classList.add('bars');
+  g.style.height = `${H}px`;
+  el('line', { x1: x(p10), x2: x(p90), y1: y + 8, y2: y + 8, stroke: 'var(--closed)', 'stroke-width': 2 }, g);
+  const box = el('rect', { x: x(p25), y, width: Math.max(4, x(p75) - x(p25)), height: 16, rx: 3, class: 'open' }, g);
   hover(box, `${money(p25)}–${money(p75)}`);
-  el('rect', { x: x(med) - 1, y: y - 4, width: 2, height: 22, fill: 'var(--ink)' }, g);
-  const labels: [number, string, string][] = [[p25, money(p25), 'end'], [p75, money(p75), 'start']];
-  for (const [v, txt, anchor] of labels) {
-    const tx = el('text', { x: x(v) + (anchor === 'end' ? -4 : 4), y: y + 34, 'text-anchor': anchor }, g);
-    tx.textContent = txt;
-  }
+  el('rect', { x: x(med) - 1.5, y: 0, width: 3, height: H, fill: 'var(--ink)' }, g);
   fig.appendChild(g);
-  fig.insertAdjacentHTML('beforeend', `<p class="note">${esc(t('m.payNote', { n: fmtNum(pays.length), median: money(med) }))}</p>`);
+  // Value labels as HTML, placed under the box ends, so they keep their size on phones.
+  const pct = (v: number) => Math.max(0, Math.min(100, (100 * x(v)) / W));
+  // Keep labels inside the figure: near an edge, pin them to that edge.
+  const loPos = pct(p25) < 18 ? 'left:0' : `right:${100 - pct(p25)}%`;
+  const hiPos = pct(p75) > 82 ? 'right:0' : `left:${pct(p75)}%`;
+  fig.insertAdjacentHTML('beforeend', `<div class="pay-labels"><span style="${loPos}">${esc(money(p25))}</span>` +
+    `<span style="${hiPos}">${esc(money(p75))}</span></div>` +
+    `<p class="note">${esc(t('m.payNote', { n: fmtNum(pays.length), median: money(med) }))}</p>`);
   return fig;
 }
 
@@ -201,7 +216,8 @@ export function renderMarket(root: HTMLElement, data: Data, country: string, cou
         .sort((a, b) => b[1] - a[1]).slice(0, 6);
       if (missing.length) {
         grid.appendChild(rowsFig(t('m.skills'), missing.map(([s, n]) =>
-          [skillName.get(s) ?? s, n, `${Math.round((100 * n) / openIdx.length)}%`]), t('m.skillsNote')));
+          [skillName.get(s) ?? s, (100 * n) / openIdx.length, `${Math.round((100 * n) / openIdx.length)}%`]),
+          t('m.skillsNote'), { scale: 100, neutral: true }));
       } else {
         grid.appendChild(rowsFig(t('m.skills'), [], t('m.skillsNone')));
       }

@@ -22,6 +22,7 @@ interface Result {
   mode: 'model' | 'quick';
   shown: number;
   notes: Map<number, string>;
+  shortCv?: number;       // word count when the CV looked too short, else 0
 }
 
 let data: Data | null = null;
@@ -68,7 +69,7 @@ function applyLang(l: Lang, remember = true): void {
     fillCountries();
     renderAbout();
   }
-  if (result) renderResults();
+  if (result) { renderResults(); if (formCollapsed) collapseForm(true); }
   else renderBefore();
 }
 
@@ -84,7 +85,9 @@ function initTabs(): void {
       $(`#panel-${x.dataset.tab}`).hidden = !on;
     }
     const about = tab.dataset.tab === 'about';
-    for (const id of ['#tool', '.intro']) $(id).hidden = about;
+    $('.intro').hidden = about;
+    $('#tool').hidden = about || formCollapsed;
+    $('#compact').hidden = about || !formCollapsed;
     if (about) $('#status').hidden = true;
     else if ($('#status-text').textContent) $('#status').hidden = false;
     if (focus) tab.focus();
@@ -193,6 +196,24 @@ function initInput(): void {
   $('#tool').addEventListener('submit', (e) => { e.preventDefault(); void run(); });
 }
 
+/* ---------- compact bar after a match ---------- */
+
+let formCollapsed = false;
+
+/** After a match the form folds into one line, so results and charts start near the top. */
+function collapseForm(on: boolean): void {
+  formCollapsed = on;
+  $('#tool').hidden = on;
+  $('#compact').hidden = !on;
+  if (on && result && data) {
+    const words = wordCount($<HTMLTextAreaElement>('#cv-text').value);
+    $('#compact-text').textContent = t('compact', {
+      country: countryName(result.country, data.geo, getLang()), words: fmtNum(words),
+      mode: t(result.mode === 'model' ? 'compact.model' : 'compact.quick'),
+    });
+  }
+}
+
 /* ---------- matching ---------- */
 
 async function ensureModel(): Promise<void> {
@@ -275,11 +296,11 @@ async function run(): Promise<void> {
       open[i] = st[i] === 'yes' ? 1 : 0;
     }
     result = { ranked, passages, country, open, status: st, cvSkills: cvSkills(cv, skillRx), mode, shown: PAGE, notes: new Map() };
-    const openCount = open.reduce((a, b) => a + b, 0);
-    status(t('status.done', { n: fmtNum(openCount), country: countryName(country, data.geo, getLang()) }));
-    if (words < 60) status(t('err.short', { words }), 'error');
+    status(''); // the results summary says the same thing; no second "done" line
+    result.shortCv = words < 60 ? words : 0;
+    collapseForm(true);
     renderResults();
-    $('#panel-matches').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+    $('#compact').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
   } finally {
     go.disabled = false;
   }
@@ -341,35 +362,40 @@ function visible(): number[] {
   return out;
 }
 
-function card(i: number, rank: Scored | undefined): string {
-  const { jobs, meta } = data!;
+/** A passage that is mostly a comma list (a skills section) says little about why a job matched. */
+function isListy(p: string): boolean {
+  const words = p.split(/\s+/).length;
+  return (p.match(/[,;|•·]/g) || []).length / Math.max(1, words) > 0.12;
+}
+
+function card(i: number, rank: Scored | undefined, prevPassage: number | null): string {
+  const { jobs } = data!;
   const L = getLang() === 'es' ? 1 : 0;
   const closed = result!.status[i] !== 'yes';
   const meta1 = [jobs.org[i], jobs.posted[i] ? t('card.posted', { date: fmtDate(jobs.posted[i]) }) : '']
     .filter(Boolean).map(esc).join(' · ');
   let why = '';
-  if (result!.mode === 'model' && rank && result!.passages[rank.passage]) {
-    why = t('card.why', { text: snippet(result!.passages[rank.passage]) });
+  if (result!.mode === 'model' && rank && rank.passage !== prevPassage) {
+    const p = result!.passages[rank.passage];
+    if (p && !isListy(p)) why = t('card.why', { text: snippet(p) });
   }
   const skillName = new Map(data!.skills.map((s) => [s.id, L ? s.es : s.en]));
-  const shared = (jobs.sk[i] ? jobs.sk[i].split(',') : []).filter((s) => result!.cvSkills.has(s)).slice(0, 3)
+  const shared = (jobs.sk[i] ? jobs.sk[i].split(',') : []).filter((s) => result!.cvSkills.has(s)).slice(0, 4)
     .map((s) => skillName.get(s) ?? s);
-  if (shared.length) why += (why ? ' ' : '') + t('card.shared', { skills: listJoin(shared) });
-  const rf = meta.labels.rf[jobs.rf[i]]?.[L] ?? '';
   const note = result!.notes.get(i);
+  const url = esc(safeUrl(jobs.url[i]));
   return `<li class="job${closed ? ' closed' : ''}">
-    <div>
-      <h3 class="job-title"><a href="${esc(safeUrl(jobs.url[i]))}" target="_blank" rel="noopener noreferrer">${esc(jobs.title[i])}</a></h3>
+      <h3 class="job-title"><a href="${url}" target="_blank" rel="noopener noreferrer">${esc(jobs.title[i])}</a></h3>
       <p class="job-meta">${meta1}</p>
-      ${whoChip(i)}${jobs.imp[i] ? `<span class="tag">${esc(t('card.impact'))}</span>` : ''}${rf ? `<span class="tag">${esc(rf)}</span>` : ''}
+      <p class="chips">${whoChip(i)}${jobs.imp[i] ? `<span class="tag">${esc(t('card.impact'))}</span>` : ''}</p>
+      <div class="job-side">
+        ${payText(i)}
+        <a class="job-link" href="${url}" target="_blank" rel="noopener noreferrer">${esc(t('card.view', { source: sourceName(i) }))} ↗</a>
+      </div>
       ${why ? `<p class="job-why">${esc(why)}</p>` : ''}
+      ${shared.length ? `<p class="job-skills"><span>${esc(t('card.shared'))}</span> ${shared.map((s) => `<span class="sk">${esc(s)}</span>`).join('')}</p>` : ''}
       ${jobs.sum[i] ? `<p class="job-sum">${esc(jobs.sum[i])}</p>` : ''}
       ${note ? `<p class="ai-note">${esc(note)}</p>` : ''}
-    </div>
-    <div class="job-side">
-      ${payText(i)}
-      <a class="job-link" href="${esc(safeUrl(jobs.url[i]))}" target="_blank" rel="noopener noreferrer">${esc(t('card.view', { source: sourceName(i) }))} ↗</a>
-    </div>
   </li>`;
 }
 
@@ -394,6 +420,7 @@ function renderResults(): void {
   root.innerHTML = `
     <p class="summary">${t(result.mode === 'model' ? 'sum.results' : 'sum.resultsQuick', {
       open: fmtNum(openCount), n: fmtNum(jobs.n), country: esc(cname), k: fmtNum(k) })}${filters.closed ? ' ' + esc(t('sum.closed')) : ''}</p>
+    ${result.shortCv ? `<p class="hint">${esc(t('err.short', { words: result.shortCv }))}</p>` : ''}
     <div class="filters" role="group" aria-label="Filters">
       <label class="check"><input type="checkbox" id="f-impact" ${filters.impact ? 'checked' : ''}> ${esc(t('f.impact'))}</label>
       <label class="check"><span class="sr">${esc(t('f.role'))}</span>
@@ -405,7 +432,7 @@ function renderResults(): void {
       <label class="check"><input type="checkbox" id="f-closed" ${filters.closed ? 'checked' : ''}> ${esc(t('f.closed'))}</label>
       <span class="count num" aria-live="polite">${esc(t('f.count', { n: fmtNum(shown.length) }))}</span>
     </div>
-    ${shown.length ? `<ol class="jobs">${shown.map((i) => card(i, rankOf.get(i))).join('')}</ol>` : `<p class="empty">${esc(t('empty.filters'))}</p>`}
+    ${shown.length ? `<ol class="jobs">${shown.map((i, j) => card(i, rankOf.get(i), j ? rankOf.get(shown[j - 1])?.passage ?? null : null)).join('')}</ol>` : `<p class="empty">${esc(t('empty.filters'))}</p>`}
     ${list.length > shown.length ? `<p class="more"><button class="secondary" id="more">${esc(t('more'))}</button></p>` : ''}
     ${renderByok()}`;
   root.querySelector('.sr')?.remove();
@@ -514,6 +541,10 @@ async function start(): Promise<void> {
   applyLang(detectLang(), false);
   $('#lang').addEventListener('click', () => applyLang(getLang() === 'es' ? 'en' : 'es'));
   initInput();
+  $('#edit').addEventListener('click', () => {
+    collapseForm(false);
+    $('#cv-text').focus();
+  });
   $('#stats').textContent = t('stats.loading');
   try {
     data = await loadData();

@@ -34,7 +34,7 @@ from pathlib import Path
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from tools.common import RAW, SITE_DATA, STATE, TMP, iter_jsonl, write_json, write_jsonl  # noqa: E402
+from tools.common import RAW, SITE_DATA, STATE, TMP, clean_summary, iter_jsonl, write_json, write_jsonl  # noqa: E402
 from tools.geo import COUNTRIES, REGIONS  # noqa: E402
 from tools.skills_vocab import KEPT, VOCAB  # noqa: E402
 from tools.vectors import ROW, load_raw  # noqa: E402
@@ -154,7 +154,7 @@ def main() -> int:
         "emp": [p["labels"]["emp"] for p in jobs],
         "sk": [",".join(p.get("skills") or []) for p in jobs],
         "imp": [1 if impact(p) else 0 for p in jobs],
-        "sum": [p.get("summary") or "" for p in jobs],
+        "sum": [clean_summary(p.get("summary") or "") for p in jobs],
     }
     jobs_json = {"n": len(jobs), "sources": srcs, **cols}
     while gz_size(jobs_json) > MAX_GZ and jobs_json["n"] > 1000:  # keep the newest

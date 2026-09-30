@@ -258,3 +258,44 @@ details.table td, details.table th { padding: 2px var(--s3) 2px 0; text-align: l
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
 }
+
+/* Market map additions: HTML labels under the charts, neutral bars, partial week */
+.fig svg.bars { width: 100%; }
+.fig svg .partial { opacity: 0.45; }
+.axis-row { display: flex; justify-content: space-between; font-size: var(--f-xs); color: var(--muted); margin-top: var(--s1); font-variant-numeric: tabular-nums; }
+.pay-labels { position: relative; height: 20px; font-size: var(--f-xs); color: var(--ink-2); margin-top: var(--s1); font-variant-numeric: tabular-nums; }
+.pay-labels span { position: absolute; top: 0; white-space: nowrap; padding: 0 var(--s1); }
+.rows.neutral .bar-fill { background: var(--closed); }
+
+/* Job card v2: phones read title, organisation, who can apply, pay and link, then the detail. */
+.job { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0; padding: var(--s4) 0; }
+.job > * { margin: 0; }
+.job .job-meta { margin-top: 2px; }
+.chips { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s1) var(--s2); margin-top: var(--s2) !important; }
+.chips .who { margin: 0; }
+.chips .tag { margin: 0; }
+.job-side { flex-direction: row; flex-wrap: wrap; gap: var(--s1) var(--s4); align-items: baseline; margin-top: var(--s2) !important; }
+.job-why, .job-skills, .job-sum, .ai-note { margin-top: var(--s2) !important; }
+.job-skills { display: flex; flex-wrap: wrap; gap: var(--s1); align-items: baseline; font-size: var(--f-xs); color: var(--muted); }
+.job-skills .sk { background: var(--closed-bg); color: var(--ink-2); padding: 0 var(--s2); border-radius: 3px; }
+.job-sum { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+@media (min-width: 760px) {
+  .job { grid-template-columns: minmax(0, 1fr) 200px; column-gap: var(--s5); }
+  .job > * { grid-column: 1; }
+  .job > .job-side { grid-column: 2; grid-row: 1 / span 3; flex-direction: column; align-items: flex-end; text-align: right; margin-top: 0 !important; gap: var(--s1); }
+}
+
+/* Compact bar shown after a match */
+.compact { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s2) var(--s4);
+  border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); padding: var(--s3) var(--s4); }
+.compact p { margin: 0; font-size: var(--f-sm); color: var(--ink-2); }
+
+/* Footer: rule aligned with the content, space above it */
+.foot { border-top: 0; margin-top: var(--s7); }
+.foot p { border-top: 1px solid var(--line); padding-top: var(--s5); margin: 0; }
+
+/* Form controls: 3:1 boundary contrast */
+:root { --control: #8f8d86; }
+:root[data-theme="dark"] { --control: #6a6964; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --control: #6a6964; } }
+.drop, select, .file-btn span, .byok-body input[type="password"], .byok-body input[type="text"], .secondary { border-color: var(--control); }
