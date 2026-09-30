@@ -1,0 +1,270 @@
+{
+"api": {
+"req": 678,
+"ads": 10642
+},
+"stakeholders": {
+"req": 752,
+"ads": 6968
+},
+"translation": {
+"req": 323,
+"ads": 5384
+},
+"compliance": {
+"req": 236,
+"ads": 5166
+},
+"hr": {
+"req": 187,
+"ads": 4858
+},
+"ops": {
+"req": 177,
+"ads": 4174
+},
+"llm": {
+"req": 365,
+"ads": 3264
+},
+"cloud": {
+"req": 307,
+"ads": 3151
+},
+"german": {
+"req": 1518,
+"ads": 3055
+},
+"custsuccess": {
+"req": 213,
+"ads": 2979
+},
+"python": {
+"req": 388,
+"ads": 2940
+},
+"prospecting": {
+"req": 215,
+"ads": 2754
+},
+"sql": {
+"req": 327,
+"ads": 2726
+},
+"finmodel": {
+"req": 131,
+"ads": 2705
+},
+"excel": {
+"req": 418,
+"ads": 2466
+},
+"deals": {
+"req": 307,
+"ads": 2466
+},
+"crm": {
+"req": 335,
+"ads": 2385
+},
+"js": {
+"req": 232,
+"ads": 2353
+},
+"b2bsales": {
+"req": 609,
+"ads": 2349
+},
+"pm": {
+"req": 308,
+"ads": 2333
+},
+"training": {
+"req": 134,
+"ads": 2105
+},
+"agile": {
+"req": 202,
+"ads": 2042
+},
+"ml": {
+"req": 151,
+"ads": 2014
+},
+"support": {
+"req": 186,
+"ads": 1969
+},
+"ux": {
+"req": 167,
+"ads": 1957
+},
+"procurement": {
+"req": 180,
+"ads": 1951
+},
+"policy": {
+"req": 138,
+"ads": 1887
+},
+"dataviz": {
+"req": 100,
+"ads": 1656
+},
+"accountmgmt": {
+"req": 197,
+"ads": 1634
+},
+"productmgmt": {
+"req": 176,
+"ads": 1634
+},
+"finanalysis": {
+"req": 151,
+"ads": 1621
+},
+"salesforce": {
+"req": 169,
+"ads": 1618
+},
+"logistics": {
+"req": 71,
+"ads": 1439
+},
+"research": {
+"req": 37,
+"ads": 1404
+},
+"socialmedia": {
+"req": 165,
+"ads": 1325
+},
+"sap": {
+"req": 246,
+"ads": 1152
+},
+"stats": {
+"req": 93,
+"ads": 987
+},
+"paidads": {
+"req": 178,
+"ads": 958
+},
+"jira": {
+"req": 139,
+"ads": 886
+},
+"spanish": {
+"req": 142,
+"ads": 736
+},
+"bi": {
+"req": 114,
+"ads": 734
+},
+"mel": {
+"req": 11,
+"ads": 722
+},
+"hubspot": {
+"req": 121,
+"ads": 711
+},
+"adobe": {
+"req": 195,
+"ads": 688
+},
+"brand": {
+"req": 61,
+"ads": 674
+},
+"nocode": {
+"req": 104,
+"ads": 651
+},
+"figma": {
+"req": 159,
+"ads": 619
+},
+"copywriting": {
+"req": 101,
+"ads": 618
+},
+"seo": {
+"req": 108,
+"ads": 594
+},
+"emailmkt": {
+"req": 97,
+"ads": 537
+},
+"french": {
+"req": 127,
+"ads": 517
+},
+"bizanalysis": {
+"req": 61,
+"ads": 494
+},
+"advocacy": {
+"req": 24,
+"ads": 456
+},
+"budget": {
+"req": 30,
+"ads": 427
+},
+"supplychain": {
+"req": 14,
+"ads": 373
+},
+"ganalytics": {
+"req": 109,
+"ads": 361
+},
+"grants": {
+"req": 35,
+"ads": 292
+},
+"contentstrategy": {
+"req": 30,
+"ads": 266
+},
+"r": {
+"req": 20,
+"ads": 220
+},
+"gis": {
+"req": 20,
+"ads": 218
+},
+"pmp": {
+"req": 13,
+"ads": 200
+},
+"video": {
+"req": 36,
+"ads": 191
+},
+"portuguese": {
+"req": 16,
+"ads": 160
+},
+"esia": {
+"req": 1,
+"ads": 140
+},
+"arabic": {
+"req": 11,
+"ads": 109
+},
+"esg": {
+"req": 4,
+"ads": 51
+},
+"carbon": {
+"req": 2,
+"ads": 40
+}
+}

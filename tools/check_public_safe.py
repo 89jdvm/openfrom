@@ -10,6 +10,7 @@ Modes
   (default)          every tracked and staged file in the git index
   --paths F [F...]   only these files (e.g. files about to be uploaded)
   --history          every file in every commit, plus commit author emails
+  --upload           with --paths: a state upload (the 5 MB commit limit does not apply)
 
 Rules
   - JSON / JSONL / CSV / XML: no string longer than 400 characters, and no
@@ -18,7 +19,7 @@ Rules
   - Code and docs: none of the private words below.
   - Any file: not the owner's phone number (read at run time from a private
     file next door; skipped when that file is absent, as in CI).
-  - No file over 5 MB, no .env file.
+  - No committed file over 5 MB, no .env file.
 
 The private words are stored rot13-encoded so this file does not itself
 contain them.
@@ -38,8 +39,8 @@ PUBLIC_EMAIL = "naksnack.world@gmail.com"
 MAX_STR = 400
 MAX_BYTES = 5 * 1024 * 1024
 
-DATA_EXT = {".json", ".jsonl", ".csv", ".xml"}
-BINARY_EXT = {".bin", ".png", ".jpg", ".jpeg", ".gif", ".webp", ".ico", ".woff", ".woff2",
+DATA_EXT = {".json", ".jsonl", ".csv", ".xml", ".uids"}
+BINARY_EXT = {".bin", ".npz", ".png", ".jpg", ".jpeg", ".gif", ".webp", ".ico", ".woff", ".woff2",
               ".ttf", ".otf", ".pdf", ".docx", ".onnx", ".wasm", ".gz", ".zip"}
 
 
@@ -90,14 +91,14 @@ def _long_strings(obj, path="$"):
             yield from _long_strings(v, f"{path}[{i}]")
 
 
-def check_blob(name: str, data: bytes, phones: list[re.Pattern]) -> list[str]:
+def check_blob(name: str, data: bytes, phones: list[re.Pattern], size_limit: bool = True) -> list[str]:
     """Return a list of problems for one file's content."""
     problems = []
     p = Path(name)
     ext = p.suffix.lower()
     if p.name == ".env" or p.name.startswith(".env."):
         problems.append(".env file")
-    if len(data) > MAX_BYTES:
+    if size_limit and len(data) > MAX_BYTES:
         problems.append(f"file is {len(data) / 1e6:.1f} MB (limit 5 MB)")
     if ext in BINARY_EXT:
         return problems
@@ -190,6 +191,8 @@ def history_emails() -> list[str]:
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[1])
     ap.add_argument("--paths", nargs="+", help="check only these files")
+    ap.add_argument("--upload", action="store_true",
+                    help="files are a state upload, not a commit: no 5 MB limit (every other rule applies)")
     ap.add_argument("--history", action="store_true", help="check every commit")
     a = ap.parse_args(argv)
 
@@ -209,7 +212,7 @@ def main(argv=None) -> int:
 
     failed = 0
     for name, data in files:
-        for prob in check_blob(name, data, phones):
+        for prob in check_blob(name, data, phones, size_limit=not a.upload):
             print(f"FAIL {name}: {prob}")
             failed += 1
     if a.history:

@@ -13,3 +13,5 @@ dist/
 __pycache__/
 *.pyc
 .pytest_cache/
+site/public/data/
+site/public/ort/

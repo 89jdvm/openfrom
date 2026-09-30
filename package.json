@@ -10,7 +10,9 @@
     "build": "tsc -p site --noEmit && vite build site",
     "preview": "vite preview site",
     "test": "vitest run",
-    "e2e": "playwright test --reporter=line"
+    "e2e": "playwright test --reporter=line",
+    "prebuild": "node scripts/copy-ort.mjs",
+    "predev": "node scripts/copy-ort.mjs"
   },
   "dependencies": {
     "@fontsource/ibm-plex-sans": "5.3.0",

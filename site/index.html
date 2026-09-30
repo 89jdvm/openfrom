@@ -3,11 +3,75 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self' blob:; connect-src 'self' https://huggingface.co https://*.huggingface.co https://*.hf.co https://openrouter.ai https://generativelanguage.googleapis.com; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
 <title>openfrom</title>
-<meta name="description" content="Remote jobs you can actually take from where you live.">
+<meta name="description" content="Remote jobs you can actually take from where you live. Your CV never leaves your browser.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%2317803d'/%3E%3Cpath d='M4 8.5l2.5 2.5L12 5.5' stroke='white' stroke-width='2' fill='none'/%3E%3C/svg%3E">
+<script type="module" src="./src/main.ts"></script>
 </head>
 <body>
-<main id="app"><p>openfrom: remote jobs you can actually take from where you live. Coming soon.</p></main>
-<script type="module" src="./src/main.ts"></script>
+<a class="skip" href="#main" data-i18n="skip">Skip to content</a>
+<header class="top">
+  <div class="wrap top-row">
+    <a class="brand" href="./" aria-label="openfrom home">openfrom</a>
+    <nav class="tabs" role="tablist" aria-label="Sections">
+      <button role="tab" id="tab-matches" aria-controls="panel-matches" aria-selected="true" data-tab="matches" data-i18n="tab.matches">Matches</button>
+      <button role="tab" id="tab-market" aria-controls="panel-market" aria-selected="false" tabindex="-1" data-tab="market" data-i18n="tab.market">Market map</button>
+      <button role="tab" id="tab-about" aria-controls="panel-about" aria-selected="false" tabindex="-1" data-tab="about" data-i18n="tab.about">About</button>
+    </nav>
+    <div class="prefs">
+      <button class="pref" id="lang" type="button" aria-label="Español">ES</button>
+      <button class="pref" id="theme" type="button" data-i18n-label="theme.toggle" aria-label="Switch theme">Dark</button>
+    </div>
+  </div>
+</header>
+<main id="main" class="wrap">
+  <section class="intro">
+    <h1 data-i18n="promise">Remote jobs you can actually take from where you live.</h1>
+    <p class="lede" id="stats" aria-live="polite"></p>
+  </section>
+
+  <form class="tool" id="tool" novalidate>
+    <div class="cv">
+      <label class="label" for="cv-text" data-i18n="cv.label">Your CV</label>
+      <div class="drop" id="drop">
+        <textarea id="cv-text" rows="7" spellcheck="false" data-i18n-ph="cv.placeholder" placeholder="Paste your CV here, or drop a PDF or Word file on this box."></textarea>
+        <div class="drop-bar">
+          <label class="file-btn">
+            <input type="file" id="cv-file" accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain">
+            <span data-i18n="cv.choose">Choose a file</span>
+          </label>
+          <span class="hint" id="file-name" data-i18n="cv.formats">PDF, Word or plain text</span>
+        </div>
+      </div>
+      <p class="privacy" data-i18n="cv.privacy">Your CV is read here in your browser and never sent anywhere.</p>
+    </div>
+    <div class="side">
+      <label class="label" for="country" data-i18n="country.label">I live in</label>
+      <select id="country"></select>
+      <p class="hint" id="country-hint" hidden data-i18n="country.guessed">Guessed from your CV. Change it if it's wrong.</p>
+      <fieldset class="mode">
+        <legend class="label" data-i18n="mode.label">Matching</legend>
+        <label class="radio"><input type="radio" name="mode" value="model" checked> <span data-i18n="mode.model">Full match (downloads a 118 MB model once)</span></label>
+        <label class="radio"><input type="radio" name="mode" value="quick"> <span data-i18n="mode.quick">Quick match (keywords only, no download)</span></label>
+        <p class="hint" id="slow-hint" hidden data-i18n="mode.slow">On a phone or a slow connection, quick match skips the download.</p>
+      </fieldset>
+      <button class="primary" id="go" type="submit" data-i18n="go">Find my jobs</button>
+    </div>
+  </form>
+
+  <div class="status" id="status" role="status" aria-live="polite" hidden>
+    <p id="status-text"></p>
+    <div class="progress" id="progress" hidden><div class="progress-bar" id="progress-bar"></div></div>
+  </div>
+
+  <section id="panel-matches" role="tabpanel" aria-labelledby="tab-matches" class="panel"></section>
+  <section id="panel-market" role="tabpanel" aria-labelledby="tab-market" class="panel" hidden></section>
+  <section id="panel-about" role="tabpanel" aria-labelledby="tab-about" class="panel" hidden></section>
+</main>
+<footer class="foot wrap">
+  <p><span data-i18n="foot.by">Made by</span> <a href="https://89jdvm.github.io/agentic-workflows-portfolio/">Juan Diego Villacís</a> · <a href="https://www.linkedin.com/in/jdv42">LinkedIn</a> · <a href="https://github.com/89jdvm/openfrom" data-i18n="foot.code">Code</a></p>
+</footer>
 </body>
 </html>

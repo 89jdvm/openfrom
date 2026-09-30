@@ -1,0 +1,23 @@
+Jonas Becker
++49 151 2345 6789 | Berlin, Germany
+
+SUMMARY
+Data analyst with five years of experience turning product and marketing data into decisions at SaaS companies. Comfortable owning the path from raw events to dashboards and experiments.
+
+EXPERIENCE
+Senior Data Analyst, B2B SaaS scale-up, Berlin (2022 to present)
+- Built the company's core metrics layer in SQL (BigQuery) and dbt; maintain dashboards in Looker for sales, marketing and product teams.
+- Designed and analysed A/B tests for onboarding flows, lifting activation by 9%.
+- Automated weekly revenue and churn reporting with Python (pandas) and Airflow.
+- Partner with product managers to define KPIs and customer success teams to predict churn.
+
+Data Analyst, e-commerce marketplace, Hamburg (2019 to 2022)
+- Owned marketing attribution and paid acquisition reporting across Google Ads and Meta.
+- Built forecasting models for demand planning in Python.
+
+EDUCATION
+MSc Statistics, Humboldt University of Berlin
+
+SKILLS
+SQL, Python, dbt, Looker, Tableau, statistics, A/B testing, Google Analytics, Excel, stakeholder management.
+Languages: German (native), English (fluent), Spanish (intermediate).

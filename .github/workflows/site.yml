@@ -5,6 +5,11 @@ on:
   schedule:
     - cron: '0 6 * * *'
   workflow_dispatch:
+    inputs:
+      fetch:
+        description: 'Fetch fresh jobs from the sources'
+        type: boolean
+        default: true
 
 permissions:
   pages: write
@@ -16,9 +21,15 @@ concurrency:
   group: site
   cancel-in-progress: false
 
+env:
+  PYTHONUTF8: '1'
+  GH_TOKEN: ${{ github.token }}
+  OPENFROM_MODEL_CACHE: ${{ github.workspace }}/.tmp/models
+
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -26,17 +37,67 @@ jobs:
           python-version: '3.12'
           cache: pip
       - run: python -m pip install -r requirements.txt
-      - name: Public-safety guard
-        run: python tools/check_public_safe.py
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: npm
       - run: npm ci
+
+      - name: Public-safety guard
+        run: python tools/check_public_safe.py
+
+      - name: Model cache
+        uses: actions/cache@v4
+        with:
+          path: .tmp/models
+          key: e5-small-761b726-q8
+
+      - name: Restore state
+        run: python tools/state.py download
+
+      - name: Fetch (nightly and on request)
+        if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.fetch)
+        run: python tools/fetch.py
+
+      - name: Merge, who can apply, stated pay
+        run: python tools/merge.py
+
+      - name: Embed new jobs
+        run: |
+          python tools/prep_embed.py
+          node --import ./tools/no-sharp.mjs tools/embed.mjs .tmp/emb/jobs_in.jsonl .tmp/emb/jobs --batch 32
+
+      - name: Labels and skills for new jobs
+        run: |
+          python tools/label_knn.py
+          python tools/skills_vocab.py
+
+      - name: Build site data
+        run: python tools/build_site_data.py
+
+      - name: Count impact jobs open to Kenya, Colombia and Ecuador
+        run: python tools/impact_counts.py >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Save state (guarded)
+        if: github.event_name != 'pull_request'
+        run: python tools/state.py upload
+
+      - name: Guard the site data
+        run: python tools/check_public_safe.py --upload --paths site/public/data
+
       - run: npm run build
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
+
+      - name: Keep the nightly schedule switched on
+        if: github.event_name == 'schedule'
+        run: |
+          day=$(date -u +%d)
+          if [ "$day" = "01" ]; then
+            gh api -X PUT "repos/${{ github.repository }}/actions/workflows/site.yml/enable"
+          fi
+
   deploy:
     needs: build
     runs-on: ubuntu-latest
