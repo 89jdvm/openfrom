@@ -51,7 +51,8 @@ def enrich(p: dict, fx: dict, today: str) -> dict:
     return {
         **p,
         "first_seen": p.get("first_seen") or today,
-        "summary": short_summary(ad_window(p.get("description") or "", 600)),
+        # List items and lines end with ". " so bullets never run into each other in the summary.
+        "summary": short_summary(ad_window(re.sub(r"(?<![.!?:;,])[ \t]*\n+\s*", ". ", p.get("description") or ""), 600)),
         "w": {k: w[k] for k in ("scope", "countries", "regions", "utc")},
         "pay": monthly_usd(p, fx),
     }

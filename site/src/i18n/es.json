@@ -145,7 +145,7 @@
   "foot.code": "Código",
   "who.range": "{a} a {b}",
   "m.partial": "semana en curso",
-  "m.partialNote": "La última barra es la semana en curso.",
+  "m.partialNote": "Última barra: semana en curso.",
   "m.peak": "La semana con más empleos fue la del {date}, con {n}.",
   "edit": "Cambiar CV o país",
   "compact": "{country} · CV de {words} palabras · {mode}",

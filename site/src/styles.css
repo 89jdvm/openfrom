@@ -311,3 +311,10 @@ details.table td, details.table th { padding: 2px var(--s3) 2px 0; text-align: l
   body.matched .lede { display: none; }
   body.matched .intro { padding: var(--s4) 0 var(--s3); }
 }
+
+/* Round 3 fixes */
+.compact .seg { white-space: nowrap; }
+@media (max-width: 639px) {
+  .filters label.check:has(#f-closed) { grid-column: 1 / -1; }
+  .filters .count { grid-row: 1; grid-column: 2; align-self: center; }
+}

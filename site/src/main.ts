@@ -208,10 +208,11 @@ function collapseForm(on: boolean): void {
   $('#compact').hidden = !on;
   if (on && result && data) {
     const words = wordCount($<HTMLTextAreaElement>('#cv-text').value);
-    $('#compact-text').textContent = t('compact', {
+    // Each part is kept on one line, so the text only breaks at a separator dot.
+    $('#compact-text').innerHTML = t('compact', {
       country: countryName(result.country, data.geo, getLang()), words: fmtNum(words),
       mode: t(result.mode === 'model' ? 'compact.model' : 'compact.quick'),
-    });
+    }).split(' · ').map((s) => `<span class="seg">${esc(s)}</span>`).join(' · ');
   }
 }
 
