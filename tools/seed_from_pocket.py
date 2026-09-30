@@ -51,6 +51,8 @@ EXCLUDED_SOURCES = {
     "eures_en": "not remote",
     "ted": "tenders (later version)",
     "worldbank": "tenders (later version)",
+    "fourdayweek": "its terms forbid training or populating another job board",
+    "getonboard": "its terms forbid republishing and model training",
 }
 CHECKED = {"vote", "checker", "fullread"}
 
