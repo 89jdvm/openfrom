@@ -94,7 +94,7 @@ def _long_strings(obj, path="$"):
 def check_blob(name: str, data: bytes, phones: list[re.Pattern], size_limit: bool = True) -> list[str]:
     """Return a list of problems for one file's content."""
     problems = []
-    p = Path(name)
+    p = Path(name.split("@")[0] if "@" in Path(name).name else name)  # history names are "path@commit"
     ext = p.suffix.lower()
     if p.name == ".env" or p.name.startswith(".env."):
         problems.append(".env file")

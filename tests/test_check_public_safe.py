@@ -56,3 +56,8 @@ def test_phone_pattern():
     import re
     pat = re.compile(r"[\s().-]?".join("123456789"))
     assert check_blob("a.md", b"call 123 456 789", [pat])
+
+
+def test_history_names_keep_their_extension():
+    # In --history mode files are named "path@commit"; a PNG must still be treated as binary.
+    assert check_blob("docs/shot.png@abc1234", b"\x89PNG " + r("WQ").encode() + b" bytes", []) == []
