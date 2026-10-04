@@ -22,7 +22,7 @@ from datetime import date, timedelta
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from tools.common import MAX_AGE_DAYS, RAW, STATE, TMP, iter_jsonl, short_summary, write_jsonl  # noqa: E402
+from tools.common import MAX_AGE_DAYS, RAW, STATE, TMP, iter_jsonl, scrub_emails, short_summary, write_jsonl  # noqa: E402
 from tools.jobtext import ad_window  # noqa: E402
 from tools.pay import fx_rates, monthly_usd  # noqa: E402
 from tools.who_can_apply import who_can_apply  # noqa: E402
@@ -33,6 +33,7 @@ KEEP = ["uid", "source", "title", "organization", "location", "url", "posted", "
         "summary", "w", "pay", "also"]
 
 
+EMAIL_IN_URL = re.compile(r"[A-Za-z0-9._%+-]+(@|%40)[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}")
 _GENERIC = {"the", "global", "international", "group", "world", "united", "new", "first", "open", "remote"}
 
 
@@ -68,7 +69,9 @@ def listable(p: dict, today: date) -> bool:
         return False
     if posted and posted > (today + timedelta(days=2)).isoformat():
         return False
-    return bool(p.get("title") and p.get("url"))
+    # A link a person can open: never a mailto or a link carrying an address, which would publish it.
+    url = p.get("url") or ""
+    return bool(p.get("title") and re.match(r"https?://", url, re.I) and not EMAIL_IN_URL.search(url))
 
 
 def dedupe(rows: list[dict], old: set[str], today: date) -> list[dict]:
@@ -104,7 +107,7 @@ def main() -> int:
                 continue
             fresh[p["uid"]] = enrich(p, fx, today.isoformat())
 
-    out = dedupe(list(old.values()) + list(fresh.values()), set(old), today)
+    out = [scrub_emails(p) for p in dedupe(list(old.values()) + list(fresh.values()), set(old), today)]
     n = write_jsonl(OUT, out)
     new = sum(1 for p in out if p["uid"] in fresh)
     scopes: dict[str, int] = {}

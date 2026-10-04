@@ -90,7 +90,7 @@ _TZ = [
     (r"\b(pst|pdt|pacific(\s+standard)?\s+time|\bpt\b)\b", (-8, -8)),
     (r"\b(mst|mdt|mountain\s+time)\b", (-7, -7)),
     (r"\b(cet|cest|central european)\b", (1, 1)),
-    (r"\b(gmt|bst|uk)\s+(time|hours|business hours)|\bgmt\b(?!\s*[+-])", (0, 0)),
+    (r"\b(gmt|bst|uk)\s+(time|hours|business hours)|\bgmt\b(?!\s*[+\-−–])", (0, 0)),
     (r"\beuropean\s+(time\s?zones?|hours|business hours)", (0, 2)),
     (r"\b(americas|latam)\s+(time\s?zones?|hours)", (-8, -3)),
     (r"\b(apac|asia[- ]pacific)\s+(time\s?zones?|hours)", (5.5, 10)),
@@ -101,11 +101,12 @@ _TZ = [
 _TZ_RX = [(re.compile(rx, re.I), band) for rx, band in _TZ]
 _TZ_CONTEXT = re.compile(r"time\s?zones?|hours|overlap|working|work\s+(in|during|within)|availability|"
                          r"available|horario|zona horaria", re.I)
-_UTC_RX = re.compile(r"\b(?:utc|gmt)\s?([+-−]\s?\d{1,2}(?::?30)?)(?:\s*(?:to|-|–|and|through)\s*(?:utc|gmt)?\s?([+-−]\s?\d{1,2}(?::?30)?))?", re.I)
+# Signs listed one by one: "+-−" in a class is a range that also takes in the en dash.
+_UTC_RX = re.compile(r"\b(?:utc|gmt)\s?([+\-−–]\s?\d{1,2}(?::?30)?)(?:\s*(?:to|-|–|and|through)\s*(?:utc|gmt)?\s?([+\-−–]\s?\d{1,2}(?::?30)?))?", re.I)
 
 
 def _off(s: str) -> float:
-    s = s.replace("−", "-").replace(" ", "")
+    s = s.replace("−", "-").replace("–", "-").replace(" ", "")
     sign = -1 if s.startswith("-") else 1
     s = s.lstrip("+-")
     h, _, m = s.partition(":")

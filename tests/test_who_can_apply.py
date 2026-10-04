@@ -61,3 +61,10 @@ def test_forty_cases():
 @pytest.mark.parametrize("j,country,expected", CASES)
 def test_case(j, country, expected):
     assert open_to(who_can_apply(j), country) == expected, who_can_apply(j)
+
+
+def test_en_dash_offsets_parse():
+    from tools.who_can_apply import text_utc
+    assert text_utc("Working hours: UTC–8 to UTC–5.") == text_utc("Working hours: UTC-8 to UTC-5.")
+    assert text_utc("Overlap with GMT−3 is required.") == text_utc("Overlap with GMT-3 is required.")
+    assert text_utc("Working hours: UTC-8 to UTC-5.")[0] < -5

@@ -179,6 +179,19 @@ def clean_summary(text: str) -> str:
     return t[:1].upper() + t[1:]
 
 
+PUBLIC_TEXT = ("title", "organization", "location", "summary")
+
+
+def scrub_emails(p: dict) -> dict:
+    """Remove email addresses from every text field that is published or saved in the state.
+    Boards sometimes put a poster's address in the employer name or the location."""
+    for k in PUBLIC_TEXT:
+        v = p.get(k)
+        if isinstance(v, str) and "@" in v:
+            p[k] = re.sub(r"\s{2,}", " ", _EMAIL.sub("", v)).strip(" -–—|·,;:()")
+    return p
+
+
 def short_summary(text: str, limit: int = 200) -> str:
     """At most `limit` characters of plain text, emails and URLs removed, cut at a word."""
     t = _URL.sub("", _EMAIL.sub("", text or ""))

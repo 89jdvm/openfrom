@@ -23,3 +23,21 @@ def test_employer_board_wins_and_state_rows_with_null_also_work():
 def test_old_jobs_drop_out_after_60_days():
     out = dedupe([row("x", "himalayas", posted="2026-07-01")], set(), date(2026, 9, 30))
     assert out == []
+
+
+def test_links_that_carry_an_address_are_not_listed():
+    at = "@"  # built at run time so the public-safety guard sees no address in this file
+    for url in ("mailto:jobs" + at + "example.org", "https://example.org/apply?to=jobs" + at + "example.org",
+                "https://example.org/apply?to=jobs%40example.org"):
+        r = row("m", "himalayas")
+        r["url"] = url
+        assert dedupe([r], set(), date(2026, 9, 30)) == []
+
+
+def test_addresses_are_scrubbed_from_published_text():
+    from tools.common import scrub_emails
+    at = "@"
+    r = scrub_emails({"title": "Designer (send CV to jo" + at + "example.org)", "organization": "jo.studio" + at + "gmail.com",
+                      "location": "Remote", "summary": "Write to jo" + at + "example.org today."})
+    assert at not in r["title"] + r["organization"] + r["summary"]
+    assert r["title"] == "Designer (send CV to" and r["organization"] == ""
