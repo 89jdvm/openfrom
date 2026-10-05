@@ -323,6 +323,12 @@ function whoChip(i: number): string {
     const label = w.world && !w.utc ? t('who.world') : t('who.you', { country: countryName(result.country, data.geo, lang) });
     return `<span class="who open">${esc(label + tz)}</span>`;
   }
+  if (w.except) {
+    const here = result.country;
+    const shut = w.except.includes(here) && !w.regions.some((r) => data!.geo.regions[r]?.includes(here));
+    const label = shut ? t('who.not', { country: countryName(here, data.geo, lang) }) + tz : t('who.tz', { band: fmtBand(w.utc ?? [0, 0]) }).trim();
+    return `<span class="who closed">${esc(label)}</span>`;
+  }
   const places = [...w.countries.map((c) => countryName(c, data!.geo, lang)), ...w.regions.map((r) => t(`region.${r}`))];
   return `<span class="who closed">${esc(places.length ? t('who.only', { places: listJoin(places) }) : t('who.tz', { band: fmtBand(w.utc ?? [0, 0]) }).trim())}${esc(places.length ? tz : '')}</span>`;
 }

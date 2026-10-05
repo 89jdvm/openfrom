@@ -25,6 +25,14 @@ describe('who can apply', () => {
     expect(openTo('R:LATAM', 'KE', geo)).toBe('no');
     expect(openTo('R:EMEA', 'KE', geo)).toBe('yes');
   });
+  it('reads "every country except" codes', () => {
+    expect(parseWho('X:KE,DE').except).toEqual(['KE', 'DE']);
+    expect(parseWho('L:US').except).toBeNull();
+    expect(openTo('X:KE,DE', 'CO', geo)).toBe('yes');
+    expect(openTo('X:KE,DE', 'KE', geo)).toBe('no');
+    expect(openTo('X:KE,DE;R:EUROPE', 'DE', geo)).toBe('yes');
+    expect(openTo('X:', 'KE', geo)).toBe('yes');
+  });
   it('applies time-zone bands', () => {
     expect(openTo('W;T:-8,-2', 'CO', geo)).toBe('yes');
     expect(openTo('W;T:-8,-2', 'KE', geo)).toBe('no');

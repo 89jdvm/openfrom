@@ -3,14 +3,19 @@ import type { Geo } from './data';
 
 export type Open = 'yes' | 'no' | 'unclear' | 'unknown';
 
-export interface Who { world: boolean; countries: string[]; regions: string[]; utc: [number, number] | null; code: string }
+export interface Who {
+  world: boolean; countries: string[]; regions: string[]; utc: [number, number] | null; code: string;
+  /** Set when the code is X:…, which means every known country except these. */
+  except: string[] | null;
+}
 
-/** Parse "W", "U", "N", or "L:US,CA;R:LATAM;T:-8,-2" (see build_site_data.w_code). */
+/** Parse "W", "U", "N", "L:US,CA;R:LATAM;T:-8,-2" or "X:CU,KP" (see build_site_data.w_code). */
 export function parseWho(code: string): Who {
-  const w: Who = { world: false, countries: [], regions: [], utc: null, code };
+  const w: Who = { world: false, countries: [], regions: [], utc: null, code, except: null };
   for (const part of code.split(';')) {
     if (part === 'W') w.world = true;
     else if (part.startsWith('L:')) w.countries = part.slice(2).split(',');
+    else if (part.startsWith('X:')) w.except = part.slice(2).split(',').filter(Boolean);
     else if (part.startsWith('R:')) w.regions = part.slice(2).split(',');
     else if (part.startsWith('T:')) {
       const [a, b] = part.slice(2).split(',').map(Number);
@@ -26,7 +31,8 @@ export function openTo(code: string, country: string, geo: Geo): Open {
   if (code === 'N') return 'unknown';
   const w = parseWho(code);
   if (!w.world) {
-    const inList = w.countries.includes(country) || w.regions.some((r) => geo.regions[r]?.includes(country));
+    const inList = (w.except ? !w.except.includes(country) : w.countries.includes(country))
+      || w.regions.some((r) => geo.regions[r]?.includes(country));
     if (!inList) return 'no';
   }
   if (w.utc) {

@@ -53,6 +53,7 @@
   "who.world": "Open to every country",
   "who.you": "Open to {country}",
   "who.only": "Only {places}",
+  "who.not": "Not open to {country}",
   "who.unclear": "Unclear who can apply",
   "who.unknown": "Location not stated",
   "who.tz": "Hours near UTC{band}",

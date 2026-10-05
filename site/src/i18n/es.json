@@ -53,6 +53,7 @@
   "who.world": "Disponible desde cualquier país",
   "who.you": "Disponible desde {country}",
   "who.only": "Solo {places}",
+  "who.not": "No disponible desde {country}",
   "who.unclear": "No está claro quién puede postularse",
   "who.unknown": "No indica ubicación",
   "who.tz": "Horario cercano a UTC{band}",

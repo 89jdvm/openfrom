@@ -67,7 +67,11 @@ CREDITS = {
 
 def w_code(w: dict) -> str:
     """Compact who-can-apply: W worldwide, U unclear, N unknown, else L:<countries>;R:<regions>,
-    with ;T:lo,hi appended for a time-zone band."""
+    with ;T:lo,hi appended for a time-zone band.
+
+    Countries a listed region already covers are left out. When the rest name more than half
+    the countries the site knows, X:<countries> lists the ones left out instead, so a board
+    that names 157 countries stays under the guard's string limit."""
     s = w["scope"]
     if s == "unclear":
         return "U"
@@ -75,10 +79,17 @@ def w_code(w: dict) -> str:
         return "N"
     parts = ["W"] if s == "worldwide" else []
     if s == "limited":
-        if w.get("countries"):
-            parts.append("L:" + ",".join(w["countries"]))
-        if w.get("regions"):
-            parts.append("R:" + ",".join(w["regions"]))
+        regions = w.get("regions") or []
+        covered = set().union(*(REGIONS.get(r, set()) for r in regions))
+        own = [c for c in dict.fromkeys(w.get("countries") or []) if c not in covered]
+        known = [c for c in own if c in COUNTRIES]
+        if len(known) * 2 > len(COUNTRIES):
+            listed = covered | set(known)
+            parts.append("X:" + ",".join(c for c in COUNTRIES if c not in listed))
+        elif own:
+            parts.append("L:" + ",".join(own))
+        if regions:
+            parts.append("R:" + ",".join(regions))
     if w.get("utc"):
         parts.append("T:" + ",".join(f"{x:g}" for x in w["utc"]))
     return ";".join(parts) or "N"
