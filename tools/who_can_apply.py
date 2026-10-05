@@ -34,6 +34,9 @@ from tools.geo import COUNTRIES, REGIONS, countries_in, regions_in, utc_overlap 
 
 TZ_SLACK = 3.0   # a named zone ("EST hours") accepts people up to 3 h away
 UTC_SLACK = 1.0  # an explicit range ("UTC-3 to UTC+3") accepts 1 h either side
+# Version of these rules. Bump it when a fix should reach jobs already saved: merge recomputes
+# who can apply for every saved job with an older stamp the next time its ad is fetched.
+RULES = 2
 
 REMOTE_RX = re.compile(r"\bremote\b|\bremotely\b|home[- ]based|work from home|\bwfh\b|telecommut|"
                        r"\banywhere\b|distributed team|\bremoto\b|teletrabajo|en remoto|a distancia|"

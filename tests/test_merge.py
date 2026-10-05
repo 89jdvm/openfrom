@@ -1,6 +1,7 @@
 from datetime import date
 
-from tools.merge import dedupe, key
+from tools.merge import dedupe, key, refresh
+from tools.who_can_apply import RULES
 
 
 def row(uid, source, org="Planet Labs", title="Solutions Architect", also=None, posted="2026-09-20"):
@@ -32,6 +33,18 @@ def test_links_that_carry_an_address_are_not_listed():
         r = row("m", "himalayas")
         r["url"] = url
         assert dedupe([r], set(), date(2026, 9, 30)) == []
+
+
+def test_a_rule_fix_reaches_saved_jobs_once():
+    saved = row("s", "himalayas")
+    saved["w"] = {"scope": "limited", "countries": ["US", "CO"], "regions": [], "utc": None}  # Colorado read as Colombia
+    ad = {"uid": "s", "title": "Analyst", "location": "Denver, CO (Remote)", "description": "", "remote": True,
+          "countries": [], "remote_scope": None, "deadline": "2026-12-01"}
+    refresh(saved, ad)
+    assert saved["w"]["countries"] == ["US"] and saved["wv"] == RULES and saved["deadline"] == "2026-12-01"
+    saved["w"]["countries"] = ["XX"]
+    refresh(saved, ad)  # stamped with the current rules: left alone
+    assert saved["w"]["countries"] == ["XX"]
 
 
 def test_addresses_are_scrubbed_from_published_text():

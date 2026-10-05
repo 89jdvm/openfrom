@@ -45,7 +45,7 @@ MAX_VEC_BYTES = 10 * 1024 * 1024
 MAX_GZ = 4 * 1024 * 1024
 IMPACT_SOURCES = {"ngojobboard", "pcdn"}
 STATE_KEYS = ["uid", "source", "title", "organization", "location", "url", "posted", "deadline", "first_seen",
-              "summary", "w", "pay", "also", "labels", "skills", "imp"]
+              "summary", "w", "wv", "pay", "also", "labels", "skills", "imp"]
 
 CREDITS = {
     "himalayas": ("Himalayas", "https://himalayas.app"),

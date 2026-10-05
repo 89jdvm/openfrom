@@ -97,12 +97,14 @@ def countries_in(text: str | None, iso_tokens: bool = False) -> list[str]:
         hits.append((m.start(), CITIES[m.group(1)]))
     for m in _STATE_NAME_RX.finditer(low):
         hits.append((m.start(), "US"))
+    state_at = {m.start(1) for m in _STATE_CODE_RX.finditer(text)}
     if not hits:  # "Austin, TX"; but never "Germany, DE"
-        for m in _STATE_CODE_RX.finditer(text):
-            hits.append((m.start(1), "US"))
+        hits += [(p, "US") for p in sorted(state_at)]
     if iso_tokens:
+        # With a US place in sight, "Denver, CO" is Colorado, never Colombia.
+        us = any(c == "US" for _, c in hits)
         for m in _ISO_TOKEN_RX.finditer(text):
-            if m.group(1) in COUNTRIES:
+            if m.group(1) in COUNTRIES and not (us and m.start() in state_at):
                 hits.append((m.start(), m.group(1)))
     out: list[str] = []
     for _, c in sorted(hits):

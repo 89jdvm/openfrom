@@ -1,4 +1,4 @@
-"""40 hand-written cases for who_can_apply. All text is synthetic."""
+"""Hand-written cases for who_can_apply (40 at M3, more added since). All text is synthetic."""
 import pytest
 
 from tools.who_can_apply import open_to, who_can_apply
@@ -51,11 +51,16 @@ CASES = [
     (job("Kenya, Uganda, Tanzania (home-based)", remote=None), "KE", "yes"),
     (job("Kenya, Uganda, Tanzania (home-based)", remote=None), "NG", "no"),
     (job("Remote", countries=["BR", "AR"]), "BR", "yes"),
+    (job("Atlanta, GA - Hybrid; Denver, CO - Hybrid; New York, NY"), "CO", "no"),
+    (job("Atlanta, GA - Hybrid; Denver, CO - Hybrid; New York, NY"), "US", "yes"),
+    (job("Denver, CO (Remote)"), "CO", "no"),
+    (job("Bogotá, CO (Remote)"), "CO", "yes"),
+    (job("Remote - Berlin, DE"), "DE", "yes"),
 ]
 
 
 def test_forty_cases():
-    assert len(CASES) == 40
+    assert len(CASES) >= 40
 
 
 @pytest.mark.parametrize("j,country,expected", CASES)

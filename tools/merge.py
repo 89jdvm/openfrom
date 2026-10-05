@@ -25,12 +25,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from tools.common import MAX_AGE_DAYS, RAW, STATE, TMP, iter_jsonl, scrub_emails, short_summary, write_jsonl  # noqa: E402
 from tools.jobtext import ad_window  # noqa: E402
 from tools.pay import fx_rates, monthly_usd  # noqa: E402
-from tools.who_can_apply import who_can_apply  # noqa: E402
+from tools.who_can_apply import RULES, who_can_apply  # noqa: E402
 
 RANK = {"greenhouse": 0, "lever": 0, "ashby": 0, "recruitee": 0, "ngojobboard": 1, "pcdn": 1}
 OUT = TMP / "jobs.jsonl"
 KEEP = ["uid", "source", "title", "organization", "location", "url", "posted", "deadline", "first_seen",
-        "summary", "w", "pay", "also"]
+        "summary", "w", "wv", "pay", "also"]
 
 
 EMAIL_IN_URL = re.compile(r"[A-Za-z0-9._%+-]+(@|%40)[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}")
@@ -47,16 +47,29 @@ def key(p: dict) -> str:
     return f"{org}|{norm(title)}"
 
 
-def enrich(p: dict, fx: dict, today: str) -> dict:
+def who(p: dict) -> dict:
     w = who_can_apply(p)
+    return {k: w[k] for k in ("scope", "countries", "regions", "utc")}
+
+
+def enrich(p: dict, fx: dict, today: str) -> dict:
     return {
         **p,
         "first_seen": p.get("first_seen") or today,
         # List items and lines end with ". " so bullets never run into each other in the summary.
         "summary": short_summary(ad_window(re.sub(r"(?<![.!?:;,])[ \t]*\n+\s*", ". ", p.get("description") or ""), 600)),
-        "w": {k: w[k] for k in ("scope", "countries", "regions", "utc")},
+        "w": who(p),
+        "wv": RULES,
         "pay": monthly_usd(p, fx),
     }
+
+
+def refresh(known: dict, p: dict) -> None:
+    """A saved job seen again keeps its labels. Its deadline is refreshed, and so is who can apply
+    when the stored answer came from an older version of the rules."""
+    known["deadline"] = p.get("deadline") or known.get("deadline")
+    if known.get("wv") != RULES:
+        known["w"], known["wv"] = who(p), RULES
 
 
 def listable(p: dict, today: date) -> bool:
@@ -102,8 +115,8 @@ def main() -> int:
     fresh: dict[str, dict] = {}
     for f in sorted(RAW.glob("*.jsonl")):
         for p in iter_jsonl(f):
-            if p["uid"] in old:  # known job: keep its stored labels, refresh nothing but dates
-                old[p["uid"]]["deadline"] = p.get("deadline") or old[p["uid"]].get("deadline")
+            if p["uid"] in old:
+                refresh(old[p["uid"]], p)
                 continue
             fresh[p["uid"]] = enrich(p, fx, today.isoformat())
 
