@@ -1,7 +1,8 @@
 /** Read a CV file in the browser, strip contact details, and split it into passages. */
 
 export class CvError extends Error {
-  constructor(public code: 'pdf' | 'file') { super(code); }
+  code: 'pdf' | 'file';
+  constructor(code: 'pdf' | 'file') { super(code); this.code = code; } // no parameter property: Node runs this file too
 }
 
 export async function readFile(file: File): Promise<string> {

@@ -57,7 +57,7 @@ const PHONE_PREFIX: Record<string, string> = {
   '+420': 'CZ',
 };
 
-const CITY: Record<string, string> = {
+export const CITY: Record<string, string> = {
   nairobi: 'KE', mombasa: 'KE', kisumu: 'KE', bogotá: 'CO', bogota: 'CO', medellín: 'CO', medellin: 'CO', cali: 'CO',
   barranquilla: 'CO', cartagena: 'CO', quito: 'EC', guayaquil: 'EC', cuenca: 'EC', lima: 'PE', berlin: 'DE',
   munich: 'DE', münchen: 'DE', hamburg: 'DE', frankfurt: 'DE', cologne: 'DE', köln: 'DE', london: 'GB', madrid: 'ES',
