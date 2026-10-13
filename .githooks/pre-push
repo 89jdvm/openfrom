@@ -1,4 +1,8 @@
 #!/bin/sh
+# Machine-wide guard first, on the commits being pushed, when installed.
+GUARD="$HOME/Documents/jd-workspace/guards"
+[ -x "$GUARD/pre-push" ] && { "$GUARD/pre-push" "$@" || exit 1; }
+
 # Public-safety guard over the full history before anything leaves this machine.
 PY=python
 [ -x .venv/Scripts/python.exe ] && PY=.venv/Scripts/python.exe

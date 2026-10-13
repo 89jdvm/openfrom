@@ -1,4 +1,8 @@
 #!/bin/sh
+# Machine-wide guard first (secrets, secret files, big files, private terms), when installed.
+GUARD="$HOME/Documents/jd-workspace/guards"
+[ -x "$GUARD/pre-commit" ] && { "$GUARD/pre-commit" || exit 1; }
+
 # Public-safety guard: refuses the commit if a staged file carries private data.
 PY=python
 [ -x .venv/Scripts/python.exe ] && PY=.venv/Scripts/python.exe
